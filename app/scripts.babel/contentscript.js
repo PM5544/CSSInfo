@@ -272,11 +272,19 @@ runAnalysers().then((results) => {
   overlay.appendChild(title);
 
   for (let result of results) {
-    let line = document.createElement('h1');
+    let line = document.createElement('div'),
+      title = document.createElement('span'),
+      value = document.createElement('span');
 
-    line.textContent = `${result.title}: ${result.value}`;
+    title.textContent = `${result.title}: `;
+    title.style.fontWeight = 'bolder';
+    line.appendChild(title);
+
+    value.textContent = `${result.value}`;
+    line.appendChild(value);
+
     line.style.fontSize = '24px';
-    title.style.marginBottom = 0;
+    line.style.marginBottom = '20px';
     overlay.appendChild(line);
   }
 
