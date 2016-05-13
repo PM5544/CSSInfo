@@ -193,7 +193,7 @@ analysers.push(
         });
       });
       resolve({
-        title: 'number of !importants',
+        title: 'Number of !importants',
         value: importants
       });
     });
@@ -254,7 +254,8 @@ runAnalysers().then((results) => {
   let overlay = document.createElement('div');
 
   overlay.style.background = 'white';
-  overlay.style.color = 'white';
+  overlay.style.color = '#44123c';
+  overlay.style.lineHeight = 1.1;
   overlay.style.width = '100%';
   overlay.style.height = '100%';
   overlay.style.float = 'left';
@@ -274,7 +275,7 @@ runAnalysers().then((results) => {
 
     line.textContent = `${result.title}: ${result.value}`;
     line.style.fontSize = '24px';
-    title.style.marginBottom = '0';
+    title.style.marginBottom = 0;
     overlay.appendChild(line);
   }
 
