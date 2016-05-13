@@ -255,8 +255,9 @@ analysers.push(
 
 const replacers = [
   {from: /{/g, to: '{\n\t'},
-  {from: /;/g, to: '\n\t'},
-  {from: /}/g, to: '\n}'}
+  {from: /;\s}/g, to: '@@@'},
+  {from: /;/g, to: ';\n\t'},
+  {from: /@@@/g, to: ';\n}'}
 ];
 function format (str) {
   replacers.forEach((replacer)=>{
@@ -284,30 +285,31 @@ runAnalysers().then((results) => {
   overlay.style.zIndex = 10000;
   overlay.style.padding = '20px';
 
-  let title = document.createElement('h1');
-  title.textContent = 'CSSInfo stats for: ' + window.location.host;
-  title.style.paddingBottom = '30px';
-  fragment.appendChild(title);
+  let h1 = document.createElement('h1');
+  h1.textContent = 'CSSInfo stats for: ' + window.location.host;
+  h1.style.paddingBottom = '30px';
+  fragment.appendChild(h1);
 
   for (let result of results) {
 
-    let line = document.createElement('h2');
-    line.textContent = `${result.title}`;
-    line.style.fontSize = '20px';
-    title.style.marginBottom = '0';
+    let h2 = document.createElement('h2');
+    h2.textContent = `${result.title}`;
+    h2.style.fontSize = '20px';
+    h2.style.marginBottom = '5px';
+    h2.style.marginTop = '15px';
 
     let p = document.createElement('p');
     p.style.marginBottom = '5px';
     p.style.marginTop = '0px';
     p.textContent = `${result.value}`;
 
-    fragment.appendChild(line);
+    fragment.appendChild(h2);
     fragment.appendChild(p);
 
     if (result.html) {
-      let html = document.createElement('div');
-      html.innerHTML = result.html;
-      fragment.appendChild(html);
+      let div = document.createElement('div');
+      div.innerHTML = result.html;
+      fragment.appendChild(div);
     }
     // let line = document.createElement('div'),
     //   title = document.createElement('span'),
