@@ -33,6 +33,7 @@ class StyleSheet {
 
 class Rule {
   constructor (cssStyleRule, index) {
+    this.cssText = cssStyleRule.cssText;
     this.selectorText = cssStyleRule.selectorText;
     this.domPosition = index;
     let selectorsTexts = this.selectorText.split(selectorSplitter);
@@ -90,6 +91,7 @@ class Styles {
       this.styles.push(new Style(propertyName, styles[propertyName]));
     }
   }
+
 }
 
 class Style {
@@ -193,6 +195,51 @@ analysers.push(
       resolve({
         title: 'number of !importants',
         value: importants
+      });
+    });
+  },
+
+  function (rules) {
+    return new Promise((resolve, reject) => {
+      let mostStyles = 0;
+      rules.forEach((rule) => {
+        let styleLength = rule.styles.styles.length;
+        if (styleLength > mostStyles) {
+          mostStyles = styleLength;
+        }
+      });
+      resolve({
+        title: 'Most number of styles per rstyleRule',
+        value: mostStyles
+      });
+    });
+  },
+
+  function (rules) {
+    return new Promise((resolve, reject) => {
+      let rule = rules[0];
+      let highest = rule.selectors[0].specificity;
+
+      resolve({
+        title: 'Highest specificity',
+        value: `ids: ${highest[0]}, classes: ${highest[1]}, elements: ${highest[2]}, position: ${highest[3]}
+${rule.cssText}`
+      });
+    });
+  }
+  ,
+
+  function (rules) {
+    return new Promise((resolve, reject) => {
+      let rule = rules[rules.length - 1 ];
+      let selectors = rule.selectors;
+      let selector = selectors[selectors.length - 1];
+      let lowest = selector.specificity;
+
+      resolve({
+        title: 'Lowest specificity',
+        value: `ids: ${lowest[0]}, classes: ${lowest[1]}, elements: ${lowest[2]}, position: ${lowest[3]}
+${rule.cssText}`
       });
     });
   }
