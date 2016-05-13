@@ -7,6 +7,7 @@ const selectorSplitter    = /\s*,\s*/;
 const idSpecificity       = /#[a-zA-Z0-9-_]+/g;
 const classSpecificity    = /(\.|:)[a-zA-Z0-9-_]+/g;
 const elementSpecificity  = /\s*[a-zA-Z0-9-_]+/g;
+const important           = /!important/g;
 
 const sheets = [];
 const rules = [];
@@ -95,6 +96,7 @@ class Style {
   constructor (name, value) {
     this.name = name;
     this.value = value;
+    this.important = important.test(this.value);
   }
 }
 
@@ -174,6 +176,23 @@ analysers.push(
       resolve({
         title: 'number of colors',
         value: Object.keys(colors)
+      });
+    });
+  },
+
+  function (rules) {
+    return new Promise((resolve, reject) => {
+      let importants = 0;
+      rules.forEach((rule)=>{
+        rule.styles.styles.forEach((style) => {
+          if (style.important) {
+            importants++;
+          }
+        });
+      });
+      resolve({
+        title: 'number of !importants',
+        value: importants
       });
     });
   }
