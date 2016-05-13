@@ -14,10 +14,11 @@ const rules = [];
 
 const analysers = [];
 
+let domPosition = 0;
+
 class StyleSheet {
-  constructor (styleSheet, index) {
+  constructor (styleSheet) {
     this.sheet = styleSheet.sheet;
-    this.domPosition = index;
 
     if ( this.sheet.cssRules) {
       this.rules = aSlice.apply( this.sheet.cssRules ).map((rule, index)=>{
@@ -32,10 +33,10 @@ class StyleSheet {
 }
 
 class Rule {
-  constructor (cssStyleRule, index) {
+  constructor (cssStyleRule) {
     this.cssText = cssStyleRule.cssText;
     this.selectorText = cssStyleRule.selectorText;
-    this.domPosition = index;
+    this.domPosition = domPosition++;
     let selectorsTexts = this.selectorText.split(selectorSplitter);
     this.selectors = selectorsTexts.map(selector=>new Selector(selector, this.domPosition));
     if (1<this.selectors.length){
@@ -126,8 +127,8 @@ function generateRules () {
   sheets.length = 0;
   rules.length = 0;
 
-  aSlice.apply( styleSheets ).forEach((styleSheet,index)=>{
-    new StyleSheet(styleSheet, index);
+  aSlice.apply( styleSheets ).forEach((styleSheet)=>{
+    new StyleSheet(styleSheet);
   });
 
   rules.sort((a,b)=>{
@@ -211,6 +212,8 @@ analysers.push(
         }
       });
 
+      console.log(ruleWithMostStyles);
+
       let formatted = format(ruleWithMostStyles.cssText);
       resolve({
         title: 'Most styles per styleRule',
@@ -286,7 +289,7 @@ runAnalysers().then((results) => {
   overlay.style.padding = '20px';
 
   let h1 = document.createElement('h1');
-  h1.textContent = 'CSSInfo stats for: ' + window.location.host;
+  h1.textContent = 'CSSInfo stats for: ' + window.location.href;
   h1.style.paddingBottom = '30px';
   fragment.appendChild(h1);
 
@@ -311,21 +314,6 @@ runAnalysers().then((results) => {
       div.innerHTML = result.html;
       fragment.appendChild(div);
     }
-    // let line = document.createElement('div'),
-    //   title = document.createElement('span'),
-    //   value = document.createElement('span');
-
-    // title.textContent = `${result.title}: `;
-    // title.style.fontWeight = 'bolder';
-    // line.appendChild(title);
-
-    // value.textContent = `${result.value}`;
-    // line.appendChild(value);
-
-    // line.style.fontSize = '24px';
-    // line.style.marginBottom = '20px';
-    // overlay.appendChild(line);
-
   }
 
   overlay.appendChild(fragment);
