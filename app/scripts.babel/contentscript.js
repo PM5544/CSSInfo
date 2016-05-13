@@ -273,6 +273,7 @@ runAnalysers().then((results) => {
   let fragment = document.createDocumentFragment();
 
   overlay.style.background = 'white';
+  overlay.id = 'cssinfo';
   overlay.style.color = '#44123c';
   overlay.style.lineHeight = 1.1;
   overlay.style.width = '100%';
@@ -284,6 +285,7 @@ runAnalysers().then((results) => {
   overlay.style.overflow = 'auto';
   overlay.style.zIndex = 10000;
   overlay.style.padding = '20px';
+  overlay.style.display = 'none';
 
   let h1 = document.createElement('h1');
   h1.textContent = 'CSSInfo stats for: ' + window.location.host;
@@ -332,3 +334,13 @@ runAnalysers().then((results) => {
   document.body.appendChild(overlay);
 
 });
+
+chrome.runtime.onMessage.addListener(
+  function(request, sender, sendResponse) {
+    if( request.message === "clicked_browser_action" ) {
+
+      let overlay = document.getElementById('cssinfo');
+      overlay.style.display = 'block';
+    }
+  }
+);
