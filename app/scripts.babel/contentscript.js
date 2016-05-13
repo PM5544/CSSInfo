@@ -262,7 +262,8 @@ runAnalysers().then((results) => {
   overlay.style.top = 0;
   overlay.style.left = 0;
   overlay.style.position = 'fixed';
-  overlay.style.zIndex = 100000;
+  overlay.style.overflow = 'auto';
+  overlay.style.zIndex = 10000;
   overlay.style.padding = '20px';
 
   let title = document.createElement('h1');
