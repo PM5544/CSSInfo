@@ -173,11 +173,11 @@ analysers.push(
           }
         });
       });
-
-
+      let uniqueColors = Object.keys(colors);
       resolve({
         title: 'Number of colors',
-        value: Object.keys(colors)
+        value: uniqueColors.length,
+        html: uniqueColors.map((color)=>`<span style="background-color: ${color}; width: 10px; height: 10px; display: inline-block;"></span>`).join(' ')
       });
     });
   },
@@ -202,15 +202,20 @@ analysers.push(
   function (rules) {
     return new Promise((resolve, reject) => {
       let mostStyles = 0;
+      let ruleWithMostStyles;
       rules.forEach((rule) => {
         let styleLength = rule.styles.styles.length;
         if (styleLength > mostStyles) {
           mostStyles = styleLength;
+          ruleWithMostStyles = rule;
         }
       });
+
+      let formatted = format(ruleWithMostStyles.cssText);
       resolve({
-        title: 'Most number of styles per rstyleRule',
-        value: mostStyles
+        title: 'Most styles per styleRule',
+        value: mostStyles,
+        html: `<pre>${formatted}</pre>`
       });
     });
   },
@@ -220,10 +225,11 @@ analysers.push(
       let rule = rules[0];
       let highest = rule.selectors[0].specificity;
 
+      let formatted = format(rule.cssText);
       resolve({
         title: 'Highest specificity',
-        value: `ids: ${highest[0]}, classes: ${highest[1]}, elements: ${highest[2]}, position: ${highest[3]}
-${rule.cssText}`
+        value: `ids: ${highest[0]}, classes: ${highest[1]}, elements: ${highest[2]}, position: ${highest[3]}`,
+        html: `<pre>${formatted}</pre>`
       });
     });
   }
@@ -235,23 +241,35 @@ ${rule.cssText}`
       let selectors = rule.selectors;
       let selector = selectors[selectors.length - 1];
       let lowest = selector.specificity;
+      let formatted = format(rule.cssText);
 
       resolve({
         title: 'Lowest specificity',
-        value: `ids: ${lowest[0]}, classes: ${lowest[1]}, elements: ${lowest[2]}, position: ${lowest[3]}
-${rule.cssText}`
+        value: `ids: ${lowest[0]}, classes: ${lowest[1]}, elements: ${lowest[2]}, position: ${lowest[3]}`,
+        html: `<pre>${formatted}</pre>`
       });
     });
   }
 
 );
 
-
+const replacers = [
+  {from: /{/g, to: '{\n\t'},
+  {from: /;/g, to: '\n\t'},
+  {from: /}/g, to: '\n}'}
+];
+function format (str) {
+  replacers.forEach((replacer)=>{
+    str = str.replace(replacer.from, replacer.to);
+  })
+  return str;
+}
 
 generateRules();
 runAnalysers().then((results) => {
 
   let overlay = document.createElement('div');
+  let fragment = document.createDocumentFragment();
 
   overlay.style.background = 'white';
   overlay.style.color = 'white';
@@ -267,17 +285,30 @@ runAnalysers().then((results) => {
   let title = document.createElement('h1');
   title.textContent = 'CSSInfo stats for: ' + window.location.host;
   title.style.paddingBottom = '30px';
-  overlay.appendChild(title);
+  fragment.appendChild(title);
 
   for (let result of results) {
-    let line = document.createElement('h1');
-
-    line.textContent = `${result.title}: ${result.value}`;
-    line.style.fontSize = '24px';
+    let line = document.createElement('h2');
+    line.textContent = `${result.title}`;
+    line.style.fontSize = '20px';
     title.style.marginBottom = '0';
-    overlay.appendChild(line);
+
+    let p = document.createElement('p');
+    p.style.marginBottom = '5px';
+    p.style.marginTop = '0px';
+    p.textContent = `${result.value}`;
+
+    fragment.appendChild(line);
+    fragment.appendChild(p);
+
+    if (result.html) {
+      let html = document.createElement('div');
+      html.innerHTML = result.html;
+      fragment.appendChild(html);
+    }
   }
 
+  overlay.appendChild(fragment);
   document.body.appendChild(overlay);
 
 });
