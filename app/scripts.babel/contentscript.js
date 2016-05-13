@@ -143,9 +143,7 @@ function generateRules () {
 function runAnalysers () {
 
   return Promise.all(analysers.map((fn)=>fn(rules)))
-    .then((res)=>{
-      console.log(res);
-    }, (err)=>{
+    .then((res)=> res, (err)=>{
       console.error(err);
     })
   ;
@@ -157,7 +155,7 @@ analysers.push(
   function (rules) {
     return new Promise((resolve, reject) => {
       resolve({
-        title: 'number of rules',
+        title: 'Number of rules',
         value: rules.length
       });
     });
@@ -173,8 +171,10 @@ analysers.push(
           }
         });
       });
+
+
       resolve({
-        title: 'number of colors',
+        title: 'Number of colors',
         value: Object.keys(colors)
       });
     });
@@ -201,7 +201,36 @@ analysers.push(
 
 
 
-
-
 generateRules();
-runAnalysers();
+runAnalysers().then((results) => {
+
+  let overlay = document.createElement('div');
+
+  overlay.style.background = 'white';
+  overlay.style.color = 'white';
+  overlay.style.width = '100%';
+  overlay.style.height = '100%';
+  overlay.style.float = 'left';
+  overlay.style.top = 0;
+  overlay.style.left = 0;
+  overlay.style.position = 'fixed';
+  overlay.style.zIndex = 100000;
+  overlay.style.padding = '20px';
+
+  let title = document.createElement('h1');
+  title.textContent = 'CSSInfo stats for: ' + window.location.host;
+  title.style.paddingBottom = '30px';
+  overlay.appendChild(title);
+
+  for (let result of results) {
+    let line = document.createElement('h1');
+
+    line.textContent = `${result.title}: ${result.value}`;
+    line.style.fontSize = '24px';
+    title.style.marginBottom = '0';
+    overlay.appendChild(line);
+  }
+
+  document.body.appendChild(overlay);
+
+});
