@@ -79,11 +79,8 @@ class Styles {
   constructor (styles) {
     this.cssText = styles.cssText;
     this.styles = [];
-    for ( let i = styles.length - 1; i <= 0; i-- ) {
+    for ( let i = styles.length - 1; i >= 0; i-- ) {
       let propertyName = styles[i];
-      // if('content'===propertyName){
-      //   debugger;
-      // }
       this.styles.push(new Style(propertyName, styles[propertyName]));
     }
   }
@@ -101,5 +98,5 @@ aSlice.apply( styleSheets ).forEach((styleSheet,index)=>{
 })
 
 rules.forEach((rule)=>{
-  // console.log(rule);
+  console.log(rule);
 })
