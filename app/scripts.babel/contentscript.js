@@ -193,7 +193,7 @@ analysers.push(
         });
       });
       resolve({
-        title: 'number of !importants',
+        title: 'Number of !importants',
         value: importants
       });
     });
@@ -272,14 +272,16 @@ runAnalysers().then((results) => {
   let fragment = document.createDocumentFragment();
 
   overlay.style.background = 'white';
-  overlay.style.color = 'white';
+  overlay.style.color = '#44123c';
+  overlay.style.lineHeight = 1.1;
   overlay.style.width = '100%';
   overlay.style.height = '100%';
   overlay.style.float = 'left';
   overlay.style.top = 0;
   overlay.style.left = 0;
   overlay.style.position = 'fixed';
-  overlay.style.zIndex = 100000;
+  overlay.style.overflow = 'auto';
+  overlay.style.zIndex = 10000;
   overlay.style.padding = '20px';
 
   let title = document.createElement('h1');
@@ -288,6 +290,7 @@ runAnalysers().then((results) => {
   fragment.appendChild(title);
 
   for (let result of results) {
+
     let line = document.createElement('h2');
     line.textContent = `${result.title}`;
     line.style.fontSize = '20px';
@@ -306,6 +309,21 @@ runAnalysers().then((results) => {
       html.innerHTML = result.html;
       fragment.appendChild(html);
     }
+    // let line = document.createElement('div'),
+    //   title = document.createElement('span'),
+    //   value = document.createElement('span');
+
+    // title.textContent = `${result.title}: `;
+    // title.style.fontWeight = 'bolder';
+    // line.appendChild(title);
+
+    // value.textContent = `${result.value}`;
+    // line.appendChild(value);
+
+    // line.style.fontSize = '24px';
+    // line.style.marginBottom = '20px';
+    // overlay.appendChild(line);
+
   }
 
   overlay.appendChild(fragment);
