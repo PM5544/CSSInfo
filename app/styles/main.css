@@ -1,3 +1,14 @@
 body {
   padding: 20px;
 }
+
+.wrapper {
+  text-align: center;
+}
+
+button {
+  background-color: #0b97c4;
+  padding: 8px 12px;
+  border: none;
+  color: white;
+}
