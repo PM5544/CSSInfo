@@ -1,7 +1,7 @@
 'use strict';
 
 const aSlice = Array.prototype.slice;
-let styleSheets =  document.querySelectorAll( "link[rel='stylesheet'], style" );
+let styleSheets =  document.querySelectorAll('link[rel=\'stylesheet\'], style');
 
 const selectorSplitter    = /\s*,\s*/;
 const idSpecificity       = /#[a-zA-Z0-9-_]+/g;
@@ -10,6 +10,8 @@ const elementSpecificity  = /\s*[a-zA-Z0-9-_]+/g;
 
 const sheets = [];
 const rules = [];
+
+const analysers = [];
 
 class StyleSheet {
   constructor (styleSheet, index) {
@@ -28,13 +30,16 @@ class StyleSheet {
   }
 }
 
-
 class Rule {
   constructor (cssStyleRule, index) {
     this.selectorText = cssStyleRule.selectorText;
     this.domPosition = index;
     let selectorsTexts = this.selectorText.split(selectorSplitter);
     this.selectors = selectorsTexts.map(selector=>new Selector(selector, this.domPosition));
+    if (1<this.selectors.length){
+      this.selectors.sort(specificitySort);
+    }
+
     this.styles = new Styles(cssStyleRule.style);
     rules.push(this);
   }
@@ -54,13 +59,13 @@ class Selector {
     // check the number id ids in the selector
     let ids  = str.match( idSpecificity );
     if ( ids ) {
-        str = str.replace( idSpecificity, ' ' );
+      str = str.replace( idSpecificity, ' ' );
     }
 
     // check the number of classes and pseudo classes used in this selector
     let classes = str.match( classSpecificity );
     if ( classes ) {
-        str = str.replace( classSpecificity, ' ' );
+      str = str.replace( classSpecificity, ' ' );
     }
 
     // check the number of element selectors classes used in this selector
@@ -93,10 +98,91 @@ class Style {
   }
 }
 
-aSlice.apply( styleSheets ).forEach((styleSheet,index)=>{
-  new StyleSheet(styleSheet, index);
-})
 
-rules.forEach((rule)=>{
-  console.log(rule);
-})
+// utils
+function specificitySort (a,b) {
+  const aSpec = a.specificity;
+  const bSpec = b.specificity;
+
+  for ( let i = 0, len = aSpec.length; i < len; i++  ) {
+    if ( aSpec[ i ] !== bSpec[ i ] ) {
+      if ( aSpec[ i ] > bSpec[ i ] ) {
+        return -1;
+      } else {
+        return 1;
+      }
+    }
+  }
+  return 0;
+}
+
+
+
+function generateRules () {
+  sheets.length = 0;
+  rules.length = 0;
+
+  aSlice.apply( styleSheets ).forEach((styleSheet,index)=>{
+    new StyleSheet(styleSheet, index);
+  });
+
+  rules.sort((a,b)=>{
+    return specificitySort(a.selectors[0],b.selectors[0]);
+  });
+
+  // rules.forEach((rule)=>{
+  //   if (rule.selectors && 1 < rule.selectors.length) {
+  //     console.log(rule);
+  //   }
+  // });
+}
+
+
+function runAnalysers () {
+
+  return Promise.all(analysers.map((fn)=>fn(rules)))
+    .then((res)=>{
+      console.log(res);
+    }, (err)=>{
+      console.error(err);
+    })
+  ;
+}
+
+
+analysers.push(
+
+  function (rules) {
+    return new Promise((resolve, reject) => {
+      resolve({
+        title: 'number of rules',
+        value: rules.length
+      });
+    });
+  },
+
+  function (rules) {
+    return new Promise((resolve, reject) => {
+      const colors = {};
+      rules.forEach((rule)=>{
+        rule.styles.styles.forEach((style) => {
+          if ('color' === style.name) {
+            colors[style.value] = true;
+          }
+        });
+      });
+      resolve({
+        title: 'number of colors',
+        value: Object.keys(colors)
+      });
+    });
+  }
+
+);
+
+
+
+
+
+generateRules();
+runAnalysers();
