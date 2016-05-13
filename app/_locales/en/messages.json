@@ -1,0 +1,10 @@
+{
+  "appName": {
+    "message": "CSSInfo",
+    "description": "The name of the application"
+  },
+  "appDescription": {
+    "message": "Client side library to show stats about CSS styles on the current page (think of it as http://cssstats.com/ in the front end).",
+    "description": "The description of the application"
+  }
+}
