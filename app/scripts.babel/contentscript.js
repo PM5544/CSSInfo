@@ -3,11 +3,14 @@
 const aSlice = Array.prototype.slice;
 let styleSheets =  document.querySelectorAll('link[rel=\'stylesheet\'], style');
 
-const selectorSplitter    = /\s*,\s*/;
-const idSpecificity       = /#[a-zA-Z0-9-_]+/g;
-const classSpecificity    = /(\.|:)[a-zA-Z0-9-_]+/g;
-const elementSpecificity  = /\s*[a-zA-Z0-9-_]+/g;
-const important           = /!important/g;
+const selectorSplitterRegExp    = /\s*,\s*/g;
+const stylesSplitter            = /\s*;\s*/g;
+const stylesTextRegExp          = /{(.*)}/;
+
+const idSpecificityRegExp       = /#[a-zA-Z0-9-_]+/g;
+const classSpecificityRegExp    = /(\.|:)[a-zA-Z0-9-_]+/g;
+const elementSpecificityRegExp  = /\s*[a-zA-Z0-9-_]+/g;
+const importantRegExp           = /!important/g;
 
 const sheets = [];
 const rules = [];
@@ -37,13 +40,31 @@ class Rule {
     this.cssText = cssStyleRule.cssText;
     this.selectorText = cssStyleRule.selectorText;
     this.domPosition = domPosition++;
-    let selectorsTexts = this.selectorText.split(selectorSplitter);
+
+    let selectorsTexts = this.selectorText.split(selectorSplitterRegExp);
     this.selectors = selectorsTexts.map(selector=>new Selector(selector, this.domPosition));
-    if (1<this.selectors.length){
+
+    if (1<this.selectors.length) {
       this.selectors.sort(specificitySort);
     }
 
-    this.styles = new Styles(cssStyleRule.style);
+    this.stylesText = cssStyleRule.style.cssText;
+
+    let splitStylesText = this.stylesText.split(stylesSplitter);
+    splitStylesText.pop();
+    this.styles = splitStylesText.map((styleText)=>{
+      let styleSplit = styleText.split(':');
+      return new Style(styleSplit[0], styleSplit[1]);
+    });
+
+
+    this.appliedStyles = [];
+    let styles = cssStyleRule.style;
+    for ( let i = styles.length - 1; i >= 0; i-- ) {
+      let propertyName = styles[i];
+      this.appliedStyles.push(new Style(propertyName, styles[propertyName]));
+    }
+
     rules.push(this);
   }
 }
@@ -60,19 +81,19 @@ class Selector {
     let str = '' + this.selector;
 
     // check the number id ids in the selector
-    let ids  = str.match( idSpecificity );
+    let ids  = str.match( idSpecificityRegExp );
     if ( ids ) {
-      str = str.replace( idSpecificity, ' ' );
+      str = str.replace( idSpecificityRegExp, ' ' );
     }
 
     // check the number of classes and pseudo classes used in this selector
-    let classes = str.match( classSpecificity );
+    let classes = str.match( classSpecificityRegExp );
     if ( classes ) {
-      str = str.replace( classSpecificity, ' ' );
+      str = str.replace( classSpecificityRegExp, ' ' );
     }
 
     // check the number of element selectors classes used in this selector
-    let elements = str.match( elementSpecificity );
+    let elements = str.match( elementSpecificityRegExp );
 
     return [
       ids         ? ids.length        : 0, // number of id's in this selector
@@ -83,25 +104,15 @@ class Selector {
   }
 }
 
-class Styles {
-  constructor (styles) {
-    this.cssText = styles.cssText;
-    this.styles = [];
-    for ( let i = styles.length - 1; i >= 0; i-- ) {
-      let propertyName = styles[i];
-      this.styles.push(new Style(propertyName, styles[propertyName]));
-    }
-  }
-
-}
 
 class Style {
   constructor (name, value) {
     this.name = name;
     this.value = value;
-    this.important = important.test(this.value);
+    this.important = importantRegExp.test(this.value);
   }
 }
+
 
 
 // utils
@@ -155,57 +166,57 @@ function runAnalysers () {
 
 analysers.push(
 
-  function (rules) {
-    return new Promise((resolve, reject) => {
-      resolve({
-        title: 'Number of rules',
-        value: rules.length
-      });
-    });
-  },
+  // function (rules) {
+  //   return new Promise((resolve, reject) => {
+  //     resolve({
+  //       title: 'Number of rules',
+  //       value: rules.length
+  //     });
+  //   });
+  // },
 
-  function (rules) {
-    return new Promise((resolve, reject) => {
-      const colors = {};
-      rules.forEach((rule)=>{
-        rule.styles.styles.forEach((style) => {
-          if ('color' === style.name) {
-            colors[style.value] = true;
-          }
-        });
-      });
-      let uniqueColors = Object.keys(colors);
-      resolve({
-        title: 'Number of colors',
-        value: uniqueColors.length,
-        html: uniqueColors.map((color)=>`<span style="background-color: ${color}; width: 10px; height: 10px; display: inline-block;"></span>`).join(' ')
-      });
-    });
-  },
+  // function (rules) {
+  //   return new Promise((resolve, reject) => {
+  //     const colors = {};
+  //     rules.forEach((rule)=>{
+  //       rule.styles.styles.forEach((style) => {
+  //         if ('color' === style.name) {
+  //           colors[style.value] = true;
+  //         }
+  //       });
+  //     });
+  //     let uniqueColors = Object.keys(colors);
+  //     resolve({
+  //       title: 'Number of colors',
+  //       value: uniqueColors.length,
+  //       html: uniqueColors.map((color)=>`<span style="background-color: ${color}; width: 10px; height: 10px; display: inline-block;"></span>`).join(' ')
+  //     });
+  //   });
+  // },
 
-  function (rules) {
-    return new Promise((resolve, reject) => {
-      let importants = 0;
-      rules.forEach((rule)=>{
-        rule.styles.styles.forEach((style) => {
-          if (style.important) {
-            importants++;
-          }
-        });
-      });
-      resolve({
-        title: 'Number of !importants',
-        value: importants
-      });
-    });
-  },
+  // function (rules) {
+  //   return new Promise((resolve, reject) => {
+  //     let importants = 0;
+  //     rules.forEach((rule)=>{
+  //       rule.styles.styles.forEach((style) => {
+  //         if (style.important) {
+  //           importants++;
+  //         }
+  //       });
+  //     });
+  //     resolve({
+  //       title: 'Number of !importants',
+  //       value: importants
+  //     });
+  //   });
+  // },
 
   function (rules) {
     return new Promise((resolve, reject) => {
       let mostStyles = 0;
       let ruleWithMostStyles;
       rules.forEach((rule) => {
-        let styleLength = rule.styles.styles.length;
+        let styleLength = rule.styles.length;
         if (styleLength > mostStyles) {
           mostStyles = styleLength;
           ruleWithMostStyles = rule;
@@ -221,38 +232,38 @@ analysers.push(
         html: `<pre>${formatted}</pre>`
       });
     });
-  },
-
-  function (rules) {
-    return new Promise((resolve, reject) => {
-      let rule = rules[0];
-      let highest = rule.selectors[0].specificity;
-
-      let formatted = format(rule.cssText);
-      resolve({
-        title: 'Highest specificity',
-        value: `ids: ${highest[0]}, classes: ${highest[1]}, elements: ${highest[2]}, position: ${highest[3]}`,
-        html: `<pre>${formatted}</pre>`
-      });
-    });
   }
-  ,
+  // ,
 
-  function (rules) {
-    return new Promise((resolve, reject) => {
-      let rule = rules[rules.length - 1 ];
-      let selectors = rule.selectors;
-      let selector = selectors[selectors.length - 1];
-      let lowest = selector.specificity;
-      let formatted = format(rule.cssText);
+  // function (rules) {
+  //   return new Promise((resolve, reject) => {
+  //     let rule = rules[0];
+  //     let highest = rule.selectors[0].specificity;
 
-      resolve({
-        title: 'Lowest specificity',
-        value: `ids: ${lowest[0]}, classes: ${lowest[1]}, elements: ${lowest[2]}, position: ${lowest[3]}`,
-        html: `<pre>${formatted}</pre>`
-      });
-    });
-  }
+  //     let formatted = format(rule.cssText);
+  //     resolve({
+  //       title: 'Highest specificity',
+  //       value: `ids: ${highest[0]}, classes: ${highest[1]}, elements: ${highest[2]}, position: ${highest[3]}`,
+  //       html: `<pre>${formatted}</pre>`
+  //     });
+  //   });
+  // },
+
+  // function (rules) {
+  //   return new Promise((resolve, reject) => {
+  //     let rule = rules[rules.length - 1 ];
+  //     let selectors = rule.selectors;
+  //     let selector = selectors[selectors.length - 1];
+  //     let lowest = selector.specificity;
+  //     let formatted = format(rule.cssText);
+
+  //     resolve({
+  //       title: 'Lowest specificity',
+  //       value: `ids: ${lowest[0]}, classes: ${lowest[1]}, elements: ${lowest[2]}, position: ${lowest[3]}`,
+  //       html: `<pre>${formatted}</pre>`
+  //     });
+  //   });
+  // }
 
 );
 
@@ -325,7 +336,7 @@ runAnalysers().then((results) => {
 
 chrome.runtime.onMessage.addListener(
   function(request, sender, sendResponse) {
-    if( request.message === "clicked_browser_action" ) {
+    if( request.message === 'clicked_browser_action' ) {
 
       let overlay = document.getElementById('cssinfo');
       overlay.style.display = 'block';
