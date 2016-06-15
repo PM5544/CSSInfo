@@ -4,6 +4,7 @@ import gulpLoadPlugins from 'gulp-load-plugins';
 import del from 'del';
 import runSequence from 'run-sequence';
 import {stream as wiredep} from 'wiredep';
+import webpack from 'webpack-stream';
 
 const $ = gulpLoadPlugins();
 
@@ -31,6 +32,10 @@ function lint(files, options) {
 gulp.task('lint', lint('app/scripts.babel/**/*.js', {
   env: {
     es6: true
+  },
+  "parserOptions": {
+    "ecmaVersion": 6,
+    "sourceType": "module"
   }
 }));
 
@@ -80,11 +85,9 @@ gulp.task('chromeManifest', () => {
 });
 
 gulp.task('babel', () => {
-  return gulp.src('app/scripts.babel/**/*.js')
-      .pipe($.babel({
-        presets: ['es2015']
-      }))
-      .pipe(gulp.dest('app/scripts'));
+  return gulp.src('app/scripts.babel/index.js')
+    .pipe(webpack( require('./webpack.config.js') ))
+    .pipe(gulp.dest('app/scripts'));
 });
 
 gulp.task('clean', del.bind(null, ['.tmp', 'dist']));
