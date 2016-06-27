@@ -1,10 +1,15 @@
+import { Base } from './Base';
 import * as regExp from 'regExp';
 import { arraySlice } from '../utils';
 import { selectors } from '../stores';
+import environmentChecks from '../environmentChecks';
 
 const selectorCache = {};
-export class Selector {
+
+export class Selector extends Base {
   constructor (selector, index, rule) {
+    super(selector, index, rule);
+
     this.selector = selector;
     this.domPosition = index;
 
@@ -42,15 +47,18 @@ export class Selector {
     ];
   }
 
+  static getMatchingNodes (selector) {
+    return arraySlice.call(document.querySelectorAll(selector));
+  }
+
   static getMatchingNodesPerSelectorPart (selector) {
     const splitSelector = selector.split(regExp.selectorPart);
     const parts = [];
-    const allMatches = arraySlice.call(document.querySelectorAll(selector));
 
     let formerSelector = '';
     let combinator = undefined;
 
-    splitSelector.forEach((selectorPart) => {
+    splitSelector.forEach(selectorPart => {
       if (!selectorPart) {
         return;
       } else if (regExp.combinators.test(selectorPart)) {
@@ -69,11 +77,15 @@ export class Selector {
         matchCount,
         combinator
       });
-
       combinator = undefined;
     });
 
-    parts[parts.length - 1].allMatches = allMatches;
+    if ('iframe' !== environmentChecks()) {
+      parts[parts.length - 1].refresh = () => {
+        parts[parts.length - 1].allMatches = Selector.getMatchingNodes(selector);
+      }
+      parts[parts.length - 1].refresh();
+    }
 
     return parts;
   }

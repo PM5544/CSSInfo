@@ -1,12 +1,24 @@
+import { Base } from './Base';
 import * as regExp from '../regExp';
-import { shorthandCache, availableProperties } from '../stores';
+import { shorthandCache } from '../stores';
+import { availableProperties } from '../shorthand';
 
-export class Style {
+export class Style extends Base {
   constructor (name, value) {
-    this.name = name;
-    this.value = value;
-    this.important = regExp.important.test(this.value);
-    this.isShortHand = Style.isShorthand(this.name);
+    super(name, value);
+
+    if (!value) {
+      let styleObject = name;
+      this.name = styleObject.name;
+      this.value = styleObject.value;
+      this.important = styleObject.important;
+      this.isShorthand = styleObject.isShorthand;
+    } else {
+      this.name = name;
+      this.value = value;
+      this.important = regExp.important.test(this.value);
+      this.isShorthand = Style.isShorthand(this.name);
+    }
   }
 
   static isShorthand (propertyName) {

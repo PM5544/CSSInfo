@@ -1,21 +1,36 @@
-import { sheets } from 'stores';
-import { Rule } from './Rule';
-import { arraySlice } from '../utils';
+import { Base } from './Base';
+import { sheets, xDomainSheets, sheetsFromOtherDomains } from 'stores';
+import createRules from '../createRules';
 
-export class StyleSheet {
+import { arraySlice, getDomain } from '../utils';
+
+export class StyleSheet extends Base {
   constructor (styleSheet) {
-    this.sheet = styleSheet.sheet;
+    super(styleSheet);
 
-    if ( this.sheet && this.sheet.cssRules && this.sheet.cssRules.length) {
-      this.rules = arraySlice.apply( this.sheet.cssRules ).map((rule, index)=>{
-        if (1 === rule.type) {
-          return new Rule(rule, index)
-        }
-      });
+    const sheet = styleSheet.sheet || {};
+    const cssRules = sheet.cssRules || [];
+    this.type = styleSheet.localName;
+    if (styleSheet.href) {
+      this.href = styleSheet.href;
+    }
 
+    if ( (sheet && cssRules && cssRules.length ) || !this.href ) {
+      this.rules = createRules(cssRules);
       sheets.push(this);
     } else {
-      console.info('cross domain stylesheet don\'t allow reading cssRules...');
+      if (this.href in sheetsFromOtherDomains) {
+        if (sheetsFromOtherDomains[this.href]) {
+          this.rules = createRules(sheetsFromOtherDomains[this.href]);
+          sheets.push(this);
+        }
+      } else {
+        const domain = getDomain(this.href);
+        if (!(domain in xDomainSheets)) {
+          xDomainSheets[domain] = [];
+        }
+        xDomainSheets[domain].push(this.href);
+      }
     }
   }
 }
