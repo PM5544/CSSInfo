@@ -30,7 +30,8 @@
       "js": [
         "scripts/contentscript.js"
       ],
-      "all_frames": false
+      "all_frames": true,
+      "match_about_blank": true
     }
   ],
   "browser_action": {
