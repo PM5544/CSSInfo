@@ -1,8 +1,17 @@
+let env;
+
 export default function () {
+  if ('undefined' !== typeof env) {
+    return env;
+  }
+
   if (window && top && window === top) {
-    return 'default';
+    env = 'default';
   }
+
   if (window !== top) {
-    return 'iframe';
+    env = 'iframe';
   }
+
+  return env;
 };
