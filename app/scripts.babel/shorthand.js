@@ -3,7 +3,7 @@ import * as regExp from './regExp';
 
 const shortHandOverridesMap = {};
 
-export const availableProperties = [];
+export const availableProperties = {};
 
 shortHandOverrides.forEach(prop => shortHandOverridesMap[prop] = undefined);
 
