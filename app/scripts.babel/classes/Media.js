@@ -14,6 +14,6 @@ export class Media extends Base {
     }
     this.mediaText = cssStyleRule.mediaText || media.mediaText;
 
-    this.rules = createRules(cssStyleRule.cssRules);
+    this.rules = createRules(cssStyleRule.cssRules || cssStyleRule.rules);
   }
 }

@@ -1,69 +1,46 @@
 import { StyleSheet } from './classes/StyleSheet';
 import { specificitySort, arraySlice, getDomain } from './utils';
-import createIfFrame from './createIfFrame';
-import createStyleSheetsInIframe from './createStyleSheetsInIframe';
+import normalizeSheet from './normalizeSheet';
 import { sheets, rules, shorthandCache, selectors, xDomainSheets, sheetsFromOtherDomains } from './stores';
 import analysers from './analysers';
 import overlay from './overlay';
 import runAnalysers from './runAnalysers';
 import { resetDomPosition } from './classes/Rule';
-import { addTopReceivingMessageListener } from './message';
 
-export default function generateRules () {
 
-  let styleSheets = document.querySelectorAll('link[rel=\'stylesheet\'], style');
-  const _styleSheets = arraySlice.apply( styleSheets );
+function parse () {
+  const styleSheets = arraySlice.apply(document.querySelectorAll('link[rel=\'stylesheet\'], style'));
   sheets.length = 0;
   rules.length = 0;
   resetDomPosition();
 
-  Object.keys(xDomainSheets).forEach((xDomain)=>{
-    delete xDomainSheets[xDomain];
-  });
-
-  _styleSheets.forEach((styleSheet) => {
+  styleSheets.forEach((styleSheet) => {
     new StyleSheet(styleSheet);
   });
 
-  const xDomains = Object.keys(xDomainSheets);
-  if (xDomains.length) {
+  rules.sort((a,b) => {
+    return specificitySort(a.selectors[0],b.selectors[0]);
+  });
 
-    const topDomain = getDomain(document.location.href);
+  runAnalysers()
+    .then((responses) => {
+      responses.map(response => console.log(response));
+    })
+  ;
+}
+export default function generateRules () {
 
-    addTopReceivingMessageListener();
+  const links = arraySlice.apply(document.querySelectorAll('link[rel=\'stylesheet\']'));
 
-    xDomains.forEach((domain) => {
-      const sheetURIs = xDomainSheets[domain];
-
-      sheetURIs.forEach((sheetURI) => {
-        sheetsFromOtherDomains[sheetURI] = undefined;
-      });
-
-      createIfFrame({
-        topDomain,
-        domain,
-        sheetURIs
-      });
+  if (links.length) {
+    // we first normalize all cross domain sheets so we can access their styles
+    Promise.all(links.map((link) => {
+      return normalizeSheet(link);
+    })).then((res) => {
+      parse();
     });
   } else {
-
-    let allDone = true;
-    Object.keys(sheetsFromOtherDomains).forEach((uri) => {
-      if (!sheetsFromOtherDomains[uri]) {
-        allDone = false;
-      }
-    });
-
-    if (allDone) {
-      rules.sort((a,b) => {
-        return specificitySort(a.selectors[0],b.selectors[0]);
-      });
-      runAnalysers()
-        .then((responses) => {
-          responses.map(response => console.log(response));
-        })
-      ;
-    }
+    parse();
   }
 
 }

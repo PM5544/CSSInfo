@@ -8,7 +8,7 @@ export const semicolonInBrackets = /\((.*?);(.*?\))/g;
 export const stylesText          = /{(.*)}/;
 export const selectorPart        = /\s+|\s?(>)\s?/;
 
-export const combinators         = new RegExp( '\\' + Object.keys(combinatorsMap).join('|\\'),'g');
+export const combinators         = new RegExp( '^\\' + Object.keys(combinatorsMap).join('$|^\\')+ '$','g');
 
 export const idSpecificity       = /#[a-zA-Z0-9-_]+/g;
 export const classSpecificity    = /(\.|:)[a-zA-Z0-9-_]+/g;
