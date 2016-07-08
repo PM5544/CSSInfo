@@ -2,7 +2,6 @@ import { Base } from './Base';
 import * as regExp from 'regExp';
 import { arraySlice } from '../utils';
 import { selectors } from '../stores';
-import environmentChecks from '../environmentChecks';
 
 const selectorCache = {};
 

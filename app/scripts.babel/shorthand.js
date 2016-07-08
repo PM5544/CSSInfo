@@ -1,6 +1,5 @@
 import { shortHandOverrides } from './settings';
 import * as regExp from './regExp';
-import environmentChecks from './environmentChecks';
 
 const shortHandOverridesMap = {};
 
